@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UI UX Journey — Gayatri Dandge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00ff88;
+      --green-dim: rgba(0,255,136,0.10);
+      --green-glow: rgba(0,255,136,0.28);
+      --green-bright: rgba(0,255,136,0.5);
+      --dark: #030a06;
+      --dark2: #0a1a0f;
+      --card-bg: rgba(10,26,15,0.88);
+      --text: #e8f5ee;
+      --text-muted: rgba(232,245,238,0.55);
+      --border: rgba(0,255,136,0.16);
+      --nav-h: 68px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Syne', sans-serif; background: var(--dark); color: var(--text); overflow-x: hidden; cursor: none; }
+
+    /* ── SCANLINES ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+      pointer-events: none; z-index: 9998;
+    }
+
+    /* ── CURSOR ── */
+    #cursor { position:fixed; width:10px; height:10px; background:var(--green); border-radius:50%; pointer-events:none; z-index:99999; transform:translate(-50%,-50%); transition:width .15s,height .15s,background .2s; mix-blend-mode:screen; }
+    #cursor-ring { position:fixed; width:34px; height:34px; border:1.5px solid var(--green); border-radius:50%; pointer-events:none; z-index:99998; transform:translate(-50%,-50%); opacity:.35; transition:width .2s,height .2s,opacity .2s; }
+    #cursor.clicking { width:6px; height:6px; background:#fff; }
+    #cursor-ring.clicking { width:48px; height:48px; opacity:.15; }
+
+    /* ── PARTICLES ── */
+    #particles { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+    .particle { position:absolute; width:2px; height:2px; background:var(--green); border-radius:50%; opacity:0; animation:floatUp linear infinite; }
+    @keyframes floatUp {
+      0%   { transform:translateY(100vh) translateX(0); opacity:0; }
+      10%  { opacity:.6; }
+      90%  { opacity:.2; }
+      100% { transform:translateY(-10vh) translateX(var(--drift)); opacity:0; }
+    }
+
+    /* ── READ PROGRESS ── */
+    #read-progress { position:fixed; top:0; left:0; height:2px; background:linear-gradient(90deg,#5EAC0A,var(--green)); z-index:10001; width:0%; box-shadow:0 0 10px var(--green-glow); transition:width .08s linear; }
+
+    /* ── BG GRID ── */
+    .bg-grid { position:fixed; inset:0; z-index:-2;
+      background-image:linear-gradient(rgba(0,255,136,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,136,.028) 1px,transparent 1px);
+      background-size:64px 64px;
+    }
+    /* Animated bg orbs */
+    .bg-orb { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:-1; }
+    .bg-orb1 { width:600px; height:600px; background:rgba(0,255,136,.04); top:-100px; right:-150px; animation:orbDrift1 18s ease-in-out infinite alternate; }
+    .bg-orb2 { width:500px; height:500px; background:rgba(0,200,80,.03); bottom:-80px; left:-100px; animation:orbDrift2 22s ease-in-out infinite alternate; }
+    @keyframes orbDrift1 { from{transform:translate(0,0) scale(1);} to{transform:translate(-80px,60px) scale(1.15);} }
+    @keyframes orbDrift2 { from{transform:translate(0,0) scale(1);} to{transform:translate(60px,-80px) scale(1.1);} }
+
+    /* ── NAV ── */
+    nav { position:fixed; top:0; left:0; right:0; height:var(--nav-h); display:flex; align-items:center; justify-content:space-between; padding:0 48px; background:rgba(3,10,6,.75); backdrop-filter:blur(24px); border-bottom:1px solid var(--border); z-index:1000; }
+    .logo { font-family:'Space Mono',monospace; font-size:15px; color:var(--green); letter-spacing:.06em; text-decoration:none; position:relative; }
+    .logo::after { content:''; position:absolute; bottom:-2px; left:0; width:0; height:1px; background:var(--green); transition:width .3s; }
+    .logo:hover::after { width:100%; }
+    .logo span { color:var(--text-muted); }
+    .back-link { display:flex; align-items:center; gap:8px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-muted); text-decoration:none; border:1px solid var(--border); padding:6px 14px; border-radius:4px; transition:all .22s; cursor:none; }
+    .back-link:hover { color:var(--green); border-color:var(--green); background:var(--green-dim); box-shadow:0 0 18px var(--green-glow); }
+    .back-link svg { width:12px; height:12px; transition:transform .22s; }
+    .back-link:hover svg { transform:translateX(-4px); }
+
+    /* ── SCROLL TOP ── */
+    #scroll-top { position:fixed; bottom:32px; right:32px; width:44px; height:44px; background:var(--green-dim); border:1px solid var(--green); border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:18px; color:var(--green); cursor:none; z-index:5000; opacity:0; transform:translateY(16px); transition:all .3s; }
+    #scroll-top.show { opacity:1; transform:translateY(0); }
+    #scroll-top:hover { background:var(--green); color:var(--dark); box-shadow:0 0 24px var(--green-glow); }
+
+    /* ── HERO ── */
+    #hero { min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding:calc(var(--nav-h) + 60px) 48px 80px; max-width:1120px; margin:0 auto; position:relative; }
+    .hero-eyebrow { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--green); margin-bottom:20px; display:flex; align-items:center; gap:16px; animation:fadeUp .9s ease both; }
+    .hero-eyebrow::before { content:''; width:32px; height:1px; background:var(--green); box-shadow:0 0 6px var(--green); }
+
+    .hero-title { font-size:clamp(52px,10vw,110px); font-weight:800; line-height:.9; letter-spacing:-.04em; animation:fadeUp .9s .1s ease both; margin-bottom:10px; }
+    .hero-title .accent { color:var(--green); position:relative; display:inline-block; }
+    .hero-title .accent::after { content:''; position:absolute; bottom:4px; left:0; width:100%; height:3px; background:var(--green); transform:scaleX(0); transform-origin:left; animation:lineReveal .6s .9s ease forwards; box-shadow:0 0 10px var(--green); }
+    @keyframes lineReveal { to { transform:scaleX(1); } }
+
+    .hero-sub { font-family:'Space Mono',monospace; font-size:12px; color:var(--text-muted); letter-spacing:.12em; margin:18px 0 24px; animation:fadeUp .9s .2s ease both; }
+    .hero-desc { font-size:15px; line-height:1.85; color:var(--text-muted); max-width:540px; margin-bottom:32px; animation:fadeUp .9s .3s ease both; }
+
+    /* Day strip */
+    .day-strip { display:flex; gap:10px; align-items:center; animation:fadeUp .9s .35s ease both; margin-bottom:36px; flex-wrap:wrap; }
+    .day-pip { display:flex; flex-direction:column; align-items:center; gap:6px; }
+    .day-pip-bar { width:44px; height:5px; border-radius:3px; background:rgba(0,255,136,.08); position:relative; overflow:hidden; }
+    .day-pip-bar::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg,#5EAC0A,var(--green)); transform:scaleX(0); transform-origin:left; border-radius:3px; animation:fillBar .6s ease forwards; box-shadow:0 0 8px var(--green-glow); }
+    .day-pip:nth-child(1) .day-pip-bar::after { animation-delay:.6s; }
+    .day-pip:nth-child(2) .day-pip-bar::after { animation-delay:.78s; }
+    .day-pip:nth-child(3) .day-pip-bar::after { animation-delay:.96s; }
+    .day-pip:nth-child(4) .day-pip-bar::after { animation-delay:1.14s; }
+    .day-pip:nth-child(5) .day-pip-bar::after { animation-delay:1.32s; }
+    @keyframes fillBar { to { transform:scaleX(1); } }
+    .day-pip-label { font-family:'Space Mono',monospace; font-size:8px; color:var(--text-muted); letter-spacing:.08em; }
+
+    .hero-actions { display:flex; flex-wrap:wrap; gap:14px; align-items:center; animation:fadeUp .9s .42s ease both; }
+
+    /* ── STATS ── */
+    .stats-bar { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); margin-top:60px; animation:fadeUp .9s .5s ease both; }
+    .stat-item { background:var(--dark2); padding:22px 20px; text-align:center; transition:background .25s; position:relative; overflow:hidden; }
+    .stat-item::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 0%, rgba(0,255,136,.06), transparent 70%); opacity:0; transition:opacity .3s; }
+    .stat-item:hover { background:rgba(0,255,136,.05); }
+    .stat-item:hover::before { opacity:1; }
+    .stat-num { font-family:'Space Mono',monospace; font-size:clamp(24px,4vw,40px); font-weight:700; color:var(--green); display:block; line-height:1; margin-bottom:6px; text-shadow:0 0 20px var(--green-glow); }
+    .stat-label { font-size:10px; color:var(--text-muted); letter-spacing:.12em; text-transform:uppercase; }
+
+    /* ── TICKER ── */
+    .ticker-wrap { overflow:hidden; border-top:1px solid var(--border); border-bottom:1px solid var(--border); padding:14px 0; background:rgba(0,255,136,.015); }
+    .ticker { display:flex; white-space:nowrap; animation:ticker 24s linear infinite; }
+    .ticker span { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.2em; color:var(--text-muted); padding:0 40px; }
+    .ticker b { color:var(--green); }
+    @keyframes ticker { from{transform:translateX(0);} to{transform:translateX(-50%);} }
+
+    /* ── SECTION LABEL ── */
+    .sec-label { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--green); margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+    .sec-label::after { content:''; flex:1; height:1px; background:var(--border); max-width:100px; }
+
+    /* ── MODULES ── */
+    #modules { padding:90px 48px; max-width:1120px; margin:0 auto; border-top:1px solid var(--border); }
+    #modules h2 { font-size:clamp(38px,6vw,64px); font-weight:800; letter-spacing:-.04em; margin-bottom:8px; }
+    #modules h2 span { color:var(--green); }
+    .intro { font-size:15px; color:var(--text-muted); margin-bottom:56px; line-height:1.75; max-width:560px; }
+
+    /* ── CARDS GRID ── */
+    .cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); }
+
+    /* ── CARD ── */
+    .topic-card { position:relative; background:var(--dark2); overflow:hidden; cursor:none; transform-style:preserve-3d; }
+    .topic-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(0,255,136,.08),transparent 60%); opacity:0; transition:opacity .4s; z-index:1; pointer-events:none; }
+    .topic-card:hover { background:rgba(8,22,12,.98); }
+    .topic-card:hover::before { opacity:1; }
+    .topic-card::after { content:''; position:absolute; top:0; right:0; width:0; height:2px; background:linear-gradient(90deg,transparent,var(--green)); transition:width .5s ease; z-index:3; box-shadow:0 0 8px var(--green); }
+    .topic-card:hover::after { width:100%; }
+
+    /* left border glow on hover */
+    .topic-card .card-left-line { position:absolute; left:0; top:100%; width:2px; height:100%; background:linear-gradient(180deg,var(--green),transparent); transition:top .5s ease .1s; z-index:3; }
+    .topic-card:hover .card-left-line { top:0; }
+
+    .card-img-wrap { position:relative; height:190px; overflow:hidden; }
+    .card-img-wrap img { width:100%; height:100%; object-fit:cover; filter:saturate(.4) brightness(.55) hue-rotate(30deg); transition:transform .7s ease, filter .4s; }
+    .topic-card:hover .card-img-wrap img { transform:scale(1.08); filter:saturate(.9) brightness(.85) hue-rotate(0deg); }
+    .card-img-wrap::after { content:''; position:absolute; bottom:0; left:0; right:0; height:60%; background:linear-gradient(transparent, var(--dark2)); pointer-events:none; }
+
+    /* Shimmer on hover */
+    .card-img-wrap::before { content:''; position:absolute; top:0; left:-100%; width:60%; height:100%; background:linear-gradient(90deg, transparent, rgba(0,255,136,.08), transparent); z-index:2; transition:left .6s ease; }
+    .topic-card:hover .card-img-wrap::before { left:150%; }
+
+    .day-badge { position:absolute; top:14px; left:14px; z-index:2; font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.14em; font-weight:700; color:var(--dark); background:var(--green); padding:4px 10px; border-radius:2px; box-shadow:0 0 14px var(--green-glow); }
+
+    .card-body { padding:20px 22px 24px; position:relative; z-index:2; }
+    .card-title { font-size:16px; font-weight:700; color:var(--green); margin-bottom:10px; transition:letter-spacing .3s, text-shadow .3s; }
+    .topic-card:hover .card-title { letter-spacing:.02em; text-shadow:0 0 12px var(--green-glow); }
+    .card-text { font-size:13px; line-height:1.75; color:var(--text-muted); }
+    .card-footer-row { display:flex; align-items:center; justify-content:space-between; margin-top:18px; }
+
+    /* ── BUTTONS ── */
+    .view-btn { display:inline-flex; align-items:center; gap:7px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--green); background:var(--green-dim); border:1px solid var(--border); padding:8px 16px; border-radius:4px; text-decoration:none; cursor:none; transition:all .22s; position:relative; overflow:hidden; }
+    .view-btn::before { content:''; position:absolute; inset:0; background:var(--green); transform:scaleX(0); transform-origin:left; transition:transform .3s ease; z-index:0; }
+    .view-btn:hover::before { transform:scaleX(1); }
+    .view-btn span, .view-btn svg { position:relative; z-index:1; }
+    .view-btn:hover { color:var(--dark); border-color:var(--green); box-shadow:0 0 20px rgba(0,255,136,.25); }
+    .view-btn svg { width:11px; height:11px; transition:transform .25s; }
+    .view-btn:hover svg { transform:translateX(3px); }
+
+    /* Figma btn special */
+    .figma-btn { background:rgba(0,255,136,.06); border-color:rgba(0,255,136,.3); }
+    .figma-btn:hover { box-shadow:0 0 28px rgba(0,255,136,.3); }
+
+    .card-num { font-family:'Space Mono',monospace; font-size:32px; font-weight:700; color:rgba(0,255,136,.05); line-height:1; transition:color .3s, text-shadow .3s; user-select:none; }
+    .topic-card:hover .card-num { color:rgba(0,255,136,.12); text-shadow:0 0 20px rgba(0,255,136,.1); }
+
+    /* Card stagger reveal */
+    .topic-card { opacity:0; transform:translateY(24px); transition:background .3s, opacity .65s ease, transform .65s ease; }
+    .topic-card.visible { opacity:1; transform:translateY(0); }
+
+    /* ── MODALS ── */
+    /* Image Modal */
+    #img-modal { position:fixed; inset:0; background:rgba(3,10,6,.96); backdrop-filter:blur(24px); z-index:2000; display:none; align-items:center; justify-content:center; padding:24px; flex-direction:column; gap:16px; }
+    #img-modal.open { display:flex; }
+    #img-modal img { max-width:90vw; max-height:80vh; border-radius:8px; border:1px solid var(--border); box-shadow:0 40px 100px rgba(0,0,0,.8), 0 0 60px rgba(0,255,136,.06); animation:zoomIn .28s ease; }
+
+    /* Video Modal */
+    #vid-modal { position:fixed; inset:0; background:rgba(3,10,6,.97); backdrop-filter:blur(28px); z-index:2000; display:none; align-items:center; justify-content:center; padding:24px; flex-direction:column; gap:20px; }
+    #vid-modal.open { display:flex; }
+    #vid-modal video { max-width:90vw; max-height:78vh; border-radius:8px; border:1px solid var(--border); box-shadow:0 40px 100px rgba(0,0,0,.9), 0 0 80px rgba(0,255,136,.08); animation:zoomIn .28s ease; }
+
+    /* Figma Modal */
+    #figma-modal { position:fixed; inset:0; background:rgba(3,10,6,.97); backdrop-filter:blur(28px); z-index:2000; display:none; align-items:center; justify-content:center; padding:24px; flex-direction:column; gap:20px; }
+    #figma-modal.open { display:flex; }
+    .figma-embed-wrap { width:90vw; max-width:1000px; height:72vh; border-radius:10px; border:1px solid var(--border); overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,.9), 0 0 80px rgba(0,255,136,.08); animation:zoomIn .28s ease; }
+    .figma-embed-wrap iframe { width:100%; height:100%; border:none; }
+
+    /* Shared modal bits */
+    @keyframes zoomIn { from{transform:scale(.88);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .modal-close { position:fixed; top:20px; right:28px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-size:26px; color:var(--green); cursor:none; line-height:1; transition:transform .2s, color .2s; z-index:2001; border:1px solid var(--border); border-radius:4px; background:rgba(0,255,136,.06); }
+    .modal-close:hover { transform:rotate(90deg) scale(1.15); color:#fff; background:rgba(0,255,136,.15); border-color:var(--green); }
+    .modal-label { font-family:'Space Mono',monospace; font-size:11px; color:var(--text-muted); letter-spacing:.1em; }
+    .modal-open-link { font-family:'Space Mono',monospace; font-size:10px; color:var(--green); letter-spacing:.1em; text-decoration:none; border:1px solid var(--border); padding:6px 14px; border-radius:4px; transition:all .2s; }
+    .modal-open-link:hover { border-color:var(--green); background:var(--green-dim); }
+
+    /* ── FOOTER ── */
+    footer { border-top:1px solid var(--border); padding:30px 48px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+    footer p { font-family:'Space Mono',monospace; font-size:10px; color:var(--text-muted); letter-spacing:.1em; }
+
+    .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 26px; font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; border-radius:4px; cursor:none; text-decoration:none; transition:all .22s; border:1px solid transparent; }
+    .btn-primary { background:var(--green); color:var(--dark); font-weight:700; border-color:var(--green); box-shadow:0 0 24px rgba(0,255,136,.2); }
+    .btn-primary:hover { background:transparent; color:var(--green); box-shadow:0 0 36px var(--green-glow); }
+    .btn-outline { background:transparent; color:var(--green); border-color:var(--border); }
+    .btn-outline:hover { border-color:var(--green); background:var(--green-dim); box-shadow:0 0 16px rgba(0,255,136,.12); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(28px);} to{opacity:1;transform:translateY(0);} }
+    .reveal { opacity:0; transform:translateY(28px); transition:opacity .7s, transform .7s; }
+    .reveal.visible { opacity:1; transform:translateY(0); }
+
+    /* ── FINAL PROJECT ── */
+    #final-project { padding:90px 48px; max-width:1120px; margin:0 auto; border-top:1px solid var(--border); position:relative; }
+    #final-project::before { content:'FINAL'; position:absolute; top:60px; right:48px; font-family:'Space Mono',monospace; font-size:clamp(60px,10vw,130px); font-weight:700; color:rgba(0,255,136,.03); letter-spacing:.1em; pointer-events:none; user-select:none; }
+
+    .fp-inner { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; }
+    .fp-left { display:flex; flex-direction:column; gap:24px; }
+    .fp-title { font-size:clamp(40px,6vw,68px); font-weight:800; letter-spacing:-.04em; line-height:.95; }
+    .fp-title span { color:var(--green); text-shadow:0 0 30px var(--green-glow); }
+    .fp-desc { font-size:15px; line-height:1.85; color:var(--text-muted); max-width:480px; }
+    .fp-tags { display:flex; flex-wrap:wrap; gap:8px; }
+    .fp-tag { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--green); border:1px solid var(--border); padding:5px 12px; border-radius:20px; background:var(--green-dim); transition:all .2s; }
+    .fp-tag:hover { border-color:var(--green); background:rgba(0,255,136,.15); box-shadow:0 0 12px var(--green-glow); }
+    .fp-actions { display:flex; flex-wrap:wrap; gap:12px; padding-top:8px; }
+
+    /* Preview box */
+    .fp-right { display:flex; justify-content:center; }
+    .fp-preview-box { position:relative; cursor:none; width:100%; max-width:440px; }
+    .fp-preview-inner { position:relative; border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--dark2); transition:transform .4s ease, box-shadow .4s ease; }
+    .fp-preview-box:hover .fp-preview-inner { transform:translateY(-8px) scale(1.01); box-shadow:0 40px 80px rgba(0,0,0,.6), 0 0 60px rgba(0,255,136,.1); }
+
+    .fp-screen-bar { display:flex; gap:6px; padding:12px 16px; background:rgba(0,255,136,.04); border-bottom:1px solid var(--border); }
+    .fp-screen-bar span { width:10px; height:10px; border-radius:50%; background:rgba(0,255,136,.2); }
+    .fp-screen-bar span:first-child { background:rgba(255,80,80,.4); }
+    .fp-screen-bar span:nth-child(2) { background:rgba(255,200,0,.3); }
+
+    .fp-screen-content { padding:24px; display:flex; flex-direction:column; gap:12px; min-height:200px; }
+    .fp-sc-line { height:8px; border-radius:4px; background:rgba(0,255,136,.08); animation:shimmerLine 2.2s ease-in-out infinite; }
+    .fp-sc-line.long { width:85%; }
+    .fp-sc-line.med { width:60%; animation-delay:.3s; }
+    .fp-sc-line.short { width:40%; animation-delay:.6s; }
+    @keyframes shimmerLine { 0%,100%{opacity:.4;} 50%{opacity:1;} }
+    .fp-sc-blocks { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .fp-sc-block { height:56px; border-radius:6px; background:rgba(0,255,136,.05); border:1px solid var(--border); animation:shimmerLine 2.5s ease-in-out infinite; }
+    .fp-sc-block:last-child { animation-delay:.4s; }
+
+    .fp-preview-glow { position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); width:200px; height:80px; background:radial-gradient(ellipse,rgba(0,255,136,.15),transparent 70%); pointer-events:none; transition:opacity .4s; }
+    .fp-preview-box:hover .fp-preview-glow { opacity:1.5; }
+
+    .fp-preview-label { display:flex; align-items:center; gap:8px; margin-top:14px; font-family:'Space Mono',monospace; font-size:10px; color:var(--text-muted); letter-spacing:.1em; justify-content:center; }
+    .fp-preview-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.4);opacity:.6;} }
+
+    @media(max-width:768px) {
+      #final-project { padding:60px 20px; }
+      .fp-inner { grid-template-columns:1fr; gap:40px; }
+      #final-project::before { display:none; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px) {
+      nav { padding:0 20px; }
+      #hero { padding:calc(var(--nav-h) + 40px) 20px 60px; }
+      .stats-bar { grid-template-columns:1fr 1fr; }
+      #modules { padding:60px 20px; }
+      .cards-grid { grid-template-columns:1fr; }
+      footer { padding:24px 20px; }
+      .figma-embed-wrap { height:55vh; }
+    }
+    @media(max-width:480px) {
+      .stats-bar { grid-template-columns:1fr; }
+      #vid-modal video { max-height:50vh; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
+  <div id="read-progress"></div>
+  <div id="particles"></div>
+  <div class="bg-orb bg-orb1"></div>
+  <div class="bg-orb bg-orb2"></div>
+  <div class="bg-grid"></div>
+
+  <!-- NAV -->
+  <nav>
+    <a href="index.html" class="logo">GD<span>.portfolio</span></a>
+    <a href="javascript:history.back()" class="back-link">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 6H1M5 1L1 6l4 5"/></svg>
+      Back to Portfolio
+    </a>
+  </nav>
+
+  <div id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+
+  <!-- IMAGE MODAL -->
+  <div id="img-modal" onclick="closeImgModal(event)">
+    <span class="modal-close" onclick="closeImgModal()">×</span>
+    <img id="modal-img" src="" alt="">
+    <span id="modal-label" class="modal-label"></span>
+  </div>
+
+  <!-- VIDEO MODAL -->
+  <div id="vid-modal" onclick="closeVidModal(event)">
+    <span class="modal-close" onclick="closeVidModal()">×</span>
+    <video id="modal-video" controls playsinline></video>
+    <span id="vid-modal-label" class="modal-label"></span>
+  </div>
+
+  <!-- FIGMA MODAL -->
+  <div id="figma-modal" onclick="closeFigmaModal(event)">
+    <span class="modal-close" onclick="closeFigmaModal()">×</span>
+    <div class="figma-embed-wrap">
+      <iframe id="figma-iframe"
+        src=""
+        allowfullscreen
+        title="Figma Project"></iframe>
+    </div>
+    <div style="display:flex;gap:16px;align-items:center;">
+      <span class="modal-label">Final Project — Figma Design</span>
+      <a href="https://www.figma.com/design/aaJUaV79VJBfRzszeDVcoP/Untitled?node-id=0-1&t=67YVzJqhBZSbDRlU-1" target="_blank" class="modal-open-link">Open in Figma ↗</a>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-eyebrow">// UI UX Module — Fab Lab SSGMCE</div>
+    <h1 class="hero-title">7 Days<br>of <span class="accent">Design.</span></h1>
+    <div class="hero-sub"> · UI · UX — A COMPLETE LEARNING JOURNEY</div>
+    <p class="hero-desc">From understanding basic interface structures to designing complete UI/UX experiences, this project reflects my learning journey in design.</p>
+
+    <div class="day-strip">
+      <div class="day-pip"><div class="day-pip-bar"></div><span class="day-pip-label">D1</span></div>
+      <div class="day-pip"><div class="day-pip-bar"></div><span class="day-pip-label">D2</span></div>
+      <div class="day-pip"><div class="day-pip-bar"></div><span class="day-pip-label">D3</span></div>
+      <div class="day-pip"><div class="day-pip-bar"></div><span class="day-pip-label">D4</span></div>
+      <div class="day-pip"><div class="day-pip-bar"></div><span class="day-pip-label">D5</span></div>
+    </div>
+
+    <div class="hero-actions">
+      <a href="#modules" class="btn btn-primary">View All Days ↓</a>
+      <a href="javascript:history.back()" class="btn btn-outline">← Portfolio</a>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item"><span class="stat-num" data-target="5">0</span><span class="stat-label">Days Completed</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="1">0</span><span class="stat-label">Technologies</span></div>
+      <div class="stat-item"><span class="stat-num" data-target="1">0</span><span class="stat-label">Project</span></div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker">
+      <span><b>UI DESIGN</b> · LAYOUT · COLOR ·</span>
+      <span><b>UX DESIGN</b> · USER FLOW · WIREFRAMES ·</span>
+      <span><b>RESEARCH</b> · USER NEEDS · PERSONAS ·</span>
+      <span><b>PROTOTYPING</b> · INTERACTIONS ·</span>
+      <span><b>FIGMA</b> · COMPONENTS · AUTO LAYOUT ·</span>
+      <span><b>USABILITY</b> · ACCESSIBILITY ·</span>
+      <span><b>DESIGN SYSTEM</b> · CONSISTENCY ·</span>
+      <span><b>UI DESIGN</b> · LAYOUT · COLOR ·</span>
+      <span><b>UX DESIGN</b> · USER FLOW · WIREFRAMES ·</span>
+      <span><b>RESEARCH</b> · USER NEEDS · PERSONAS ·</span>
+      <span><b>PROTOTYPING</b> · INTERACTIONS ·</span>
+      <span><b>FIGMA</b> · COMPONENTS · AUTO LAYOUT ·</span>
+      <span><b>USABILITY</b> · ACCESSIBILITY ·</span>
+      <span><b>DESIGN SYSTEM</b> · CONSISTENCY ·</span>
+    </div>
+  </div>
+
+  <!-- MODULES -->
+  <section id="modules">
+    <div class="sec-label reveal">Learning Modules — 01 through 05</div>
+    <h2 class="reveal">The <span>Journey</span></h2>
+    <p class="intro reveal">Every day introduced a new concept. Click any card to view the assignment for that day.</p>
+
+    <div class="cards-grid">
+
+      <!-- DAY 01 -->
+      <div class="topic-card">
+        <div class="card-left-line"></div>
+        <div class="card-img-wrap">
+          <span class="day-badge">DAY 01</span>
+          <img src="https://cdn.sanity.io/images/599r6htc/regionalized/0528b03ccad1b7951ba4cd239d441e362af446ce-2120x1000.jpg?w=2120&h=1000&q=75&fit=max&auto=format" alt="Introduction">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Introduction</div>
+          <p class="card-text">Explored the core principles of UI/UX design — visual hierarchy, color theory, typography, and layout. Learned how even minor design choices influence usability and the overall user experience.</p>
+          <div class="card-footer-row">
+            <a href="image.png" class="view-btn" onclick="openImgModal(event,'image.png','Day 01 — Introduction')">
+              <span>View Assignment</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6h10M6 1l5 5-5 5"/></svg>
+            </a>
+            <span class="card-num">01</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 02 -->
+      <div class="topic-card">
+        <div class="card-left-line"></div>
+        <div class="card-img-wrap">
+          <span class="day-badge">DAY 02</span>
+          <img src="https://cdn.sanity.io/images/599r6htc/regionalized/0528b03ccad1b7951ba4cd239d441e362af446ce-2120x1000.jpg?w=2120&h=1000&q=75&fit=max&auto=format" alt="Figma">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Explored Figma</div>
+          <p class="card-text">Learned how to create frames and structure layouts in Figma. Understood how frames help organize content, maintain consistency, and build a strong foundation for UI design.</p>
+          <div class="card-footer-row">
+            <a href="day2.png" class="view-btn" onclick="openImgModal(event,'day2.png','Day 02 — Explored Figma')">
+              <span>View Assignment</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6h10M6 1l5 5-5 5"/></svg>
+            </a>
+            <span class="card-num">02</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 03 -->
+      <div class="topic-card">
+        <div class="card-left-line"></div>
+        <div class="card-img-wrap">
+          <span class="day-badge">DAY 03</span>
+          <img src="https://cdn.sanity.io/images/599r6htc/regionalized/0528b03ccad1b7951ba4cd239d441e362af446ce-2120x1000.jpg?w=2120&h=1000&q=75&fit=max&auto=format" alt="Project">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Work on the Project</div>
+          <p class="card-text">Worked on a real-world design project based on the Red Bull brand. Applied UI/UX principles to create a visually engaging and user-friendly interface, focusing on layout, consistency, and overall user experience.</p>
+          <div class="card-footer-row">
+            <a href="day3.png" class="view-btn" onclick="openImgModal(event,'day3.png','Day 03 — Work on the Project')">
+              <span>View Assignment</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6h10M6 1l5 5-5 5"/></svg>
+            </a>
+            <span class="card-num">03</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 04 -->
+      <div class="topic-card">
+        <div class="card-left-line"></div>
+        <div class="card-img-wrap">
+          <span class="day-badge">DAY 04</span>
+          <img src="https://cdn.sanity.io/images/599r6htc/regionalized/0528b03ccad1b7951ba4cd239d441e362af446ce-2120x1000.jpg?w=2120&h=1000&q=75&fit=max&auto=format" alt="UI Design">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Learn How to Design UI</div>
+          <p class="card-text">Learned how to design user interfaces by applying layout, color, and typography principles. Understood how to create visually appealing and user-friendly designs that enhance the overall experience.</p>
+          <div class="card-footer-row">
+            <a href="weeknd.png" class="view-btn" onclick="openImgModal(event,'weeknd.png','Day 04 — Learn How to Design UI')">
+              <span>View Assignment</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6h10M6 1l5 5-5 5"/></svg>
+            </a>
+            <span class="card-num">04</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 05 — Video Modal -->
+      <div class="topic-card">
+        <div class="card-left-line"></div>
+        <div class="card-img-wrap">
+          <span class="day-badge">DAY 05</span>
+          <img src="https://cdn.sanity.io/images/599r6htc/regionalized/0528b03ccad1b7951ba4cd239d441e362af446ce-2120x1000.jpg?w=2120&h=1000&q=75&fit=max&auto=format" alt="Animation">
+        </div>
+        <div class="card-body">
+          <div class="card-title">How to Add Animation</div>
+          <p class="card-text">Learned how to create interactive prototypes by adding animations and transitions. Understood how movement and interaction enhance the overall user experience and bring designs to life.</p>
+          <div class="card-footer-row">
+            <a href="#" class="view-btn" onclick="openVidModal(event,'red bull.mp4','Day 05 — How to Add Animation')">
+              <span>▶ Play Video</span>
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 6h10M6 1l5 5-5 5"/></svg>
+            </a>
+            <span class="card-num">05</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FINAL PROJECT -->
+  <section id="final-project">
+    <div class="fp-inner">
+      <div class="fp-left reveal">
+        <div class="sec-label">Final Project — on concert</div>
+        <h2 class="fp-title">The <span>Final</span><br>Design</h2>
+        <p class="fp-desc">After five days of exploration and learning, this is the culmination — a complete UI/UX project built in Figma from scratch. It brings together everything: layout systems, color theory, typography, components, and interactive prototyping.</p>
+        <div class="fp-tags">
+          <span class="fp-tag">Figma</span>
+          <span class="fp-tag">UI Design</span>
+          <span class="fp-tag">Prototyping</span>
+          <span class="fp-tag">Design System</span>
+        </div>
+        <div class="fp-actions">
+          <a href="#" class="btn btn-primary" onclick="openFigmaModal(event)">Open in Figma ↗</a>
+          <a href="https://www.figma.com/design/aaJUaV79VJBfRzszeDVcoP/Untitled?node-id=0-1&t=67YVzJqhBZSbDRlU-1" target="_blank" class="btn btn-outline">View External ↗</a>
+        </div>
+      </div>
+      <div class="fp-right reveal">
+        <div class="fp-preview-box" onclick="openFigmaModal(event)">
+          <div class="fp-preview-inner">
+            <div class="fp-preview-screen">
+              <div class="fp-screen-bar"><span></span><span></span><span></span></div>
+              <div class="fp-screen-content">
+                <div class="fp-sc-line long"></div>
+                <div class="fp-sc-line med"></div>
+                <div class="fp-sc-blocks">
+                  <div class="fp-sc-block"></div>
+                  <div class="fp-sc-block"></div>
+                </div>
+                <div class="fp-sc-line short"></div>
+                <div class="fp-sc-line med"></div>
+              </div>
+            </div>
+            <div class="fp-preview-glow"></div>
+          </div>
+          <div class="fp-preview-label">
+            <span class="fp-preview-dot"></span>
+            Click to open project
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2026 Gayatri Dandge — UI/UX Design Module</p>
+    <a href="javascript:history.back()" class="btn btn-outline" style="padding:8px 18px;font-size:10px;">← Back to Portfolio</a>
+  </footer>
+
+  <script>
+    /* ── PARTICLES ── */
+    (function spawnParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 28; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 2.5 + 1;
+        p.style.cssText = `
+          left:${Math.random()*100}%;
+          width:${size}px; height:${size}px;
+          animation-duration:${10 + Math.random()*18}s;
+          animation-delay:${Math.random()*14}s;
+          --drift:${(Math.random()-0.5)*160}px;
+          opacity:0;
+        `;
+        container.appendChild(p);
+      }
+    })();
+
+    /* ── CUSTOM CURSOR ── */
+    const cur = document.getElementById('cursor');
+    const ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cur.style.left = mx + 'px'; cur.style.top = my + 'px';
+    });
+    document.addEventListener('mousedown', () => { cur.classList.add('clicking'); ring.classList.add('clicking'); });
+    document.addEventListener('mouseup', () => { cur.classList.remove('clicking'); ring.classList.remove('clicking'); });
+    (function animRing() {
+      rx += (mx - rx) * 0.11; ry += (my - ry) * 0.11;
+      ring.style.left = rx + 'px'; ring.style.top = ry + 'px';
+      requestAnimationFrame(animRing);
+    })();
+    document.querySelectorAll('a, button, .view-btn, .modal-close, #scroll-top').forEach(el => {
+      el.addEventListener('mouseenter', () => { cur.style.width='18px'; cur.style.height='18px'; ring.style.width='52px'; ring.style.height='52px'; ring.style.opacity='.6'; });
+      el.addEventListener('mouseleave', () => { cur.style.width='10px'; cur.style.height='10px'; ring.style.width='34px'; ring.style.height='34px'; ring.style.opacity='.35'; });
+    });
+
+    /* ── READ PROGRESS + SCROLL BTN ── */
+    const prog = document.getElementById('read-progress');
+    const scrollBtn = document.getElementById('scroll-top');
+    window.addEventListener('scroll', () => {
+      const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+      prog.style.width = pct + '%';
+      scrollBtn.classList.toggle('show', window.scrollY > 300);
+    });
+
+    /* ── STAT COUNTER ── */
+    function animateCount(el) {
+      const target = +el.dataset.target;
+      let start = 0;
+      const step = target / 40;
+      const t = setInterval(() => {
+        start += step;
+        if (start >= target) { el.textContent = target; clearInterval(t); }
+        else el.textContent = Math.floor(start);
+      }, 30);
+    }
+
+    /* ── INTERSECTION OBSERVERS ── */
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    document.querySelectorAll('.stat-num').forEach(el => {
+      const sio = new IntersectionObserver(([e]) => { if(e.isIntersecting){ animateCount(el); sio.unobserve(el); } }, { threshold:.5 });
+      sio.observe(el);
+    });
+
+    const cards = document.querySelectorAll('.topic-card');
+    const cio = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          const idx = Array.from(cards).indexOf(e.target);
+          setTimeout(() => e.target.classList.add('visible'), idx * 100);
+          cio.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    cards.forEach(c => cio.observe(c));
+
+    /* ── 3D TILT ON CARDS ── */
+    cards.forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width - 0.5;
+        const y = (e.clientY - r.top) / r.height - 0.5;
+        card.style.transform = `perspective(800px) rotateY(${x*6}deg) rotateX(${-y*4}deg) translateY(-2px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(800px) rotateY(0) rotateX(0) translateY(0)';
+      });
+    });
+
+    /* ── IMAGE MODAL ── */
+    function openImgModal(e, src, label) {
+      e.preventDefault();
+      document.getElementById('modal-img').src = src;
+      document.getElementById('modal-label').textContent = label || '';
+      document.getElementById('img-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeImgModal(e) {
+      if (!e || e.target === document.getElementById('img-modal') || e.target.classList.contains('modal-close')) {
+        document.getElementById('img-modal').classList.remove('open');
+        document.getElementById('modal-img').src = '';
+        document.body.style.overflow = '';
+      }
+    }
+
+    /* ── VIDEO MODAL ── */
+    function openVidModal(e, src, label) {
+      e.preventDefault();
+      const vid = document.getElementById('modal-video');
+      vid.src = src;
+      document.getElementById('vid-modal-label').textContent = label || '';
+      document.getElementById('vid-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+      vid.load();
+      vid.play().catch(() => {});
+    }
+    function closeVidModal(e) {
+      if (!e || e.target === document.getElementById('vid-modal') || e.target.classList.contains('modal-close')) {
+        const vid = document.getElementById('modal-video');
+        vid.pause();
+        vid.src = '';
+        document.getElementById('vid-modal').classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    }
+
+    /* ── FIGMA MODAL ── */
+    const FIGMA_EMBED = 'https://www.figma.com/embed?embed_host=share&url=' +
+      encodeURIComponent('https://www.figma.com/design/aaJUaV79VJBfRzszeDVcoP/Untitled?node-id=0-1&t=67YVzJqhBZSbDRlU-1');
+
+    function openFigmaModal(e) {
+      e.preventDefault();
+      document.getElementById('figma-iframe').src = FIGMA_EMBED;
+      document.getElementById('figma-modal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeFigmaModal(e) {
+      if (!e || e.target === document.getElementById('figma-modal') || e.target.classList.contains('modal-close')) {
+        document.getElementById('figma-iframe').src = '';
+        document.getElementById('figma-modal').classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    }
+
+    /* ── ESC KEY ── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        closeImgModal(); closeVidModal(); closeFigmaModal();
+      }
+    });
+  </script>
+</body>
+</html>
